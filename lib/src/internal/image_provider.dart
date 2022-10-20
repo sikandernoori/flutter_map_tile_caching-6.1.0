@@ -154,7 +154,8 @@ class FMTCImageProvider extends ImageProvider<FMTCImageProvider> {
           retryIf: (e) =>
               e is SocketException ||
               e is TimeoutException ||
-              e is HttpException,
+              e is HttpException ||
+              e is StateError,
           maxAttempts: 3,
         );
         headers.forEach((k, v) => request.headers.add(k, v));

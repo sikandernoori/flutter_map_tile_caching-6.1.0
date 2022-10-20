@@ -44,7 +44,7 @@ class FMTCTileProvider extends TileProvider {
   @override
   void dispose() {
     super.dispose();
-    // httpClient.close();
+    httpClient.close();
   }
 
   /// Get a browsed tile as an image, paint it on the map and save it's bytes to cache for later (dependent on the [CacheBehavior])

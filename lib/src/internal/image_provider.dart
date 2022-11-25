@@ -151,7 +151,6 @@ class FMTCImageProvider extends ImageProvider<FMTCImageProvider> {
               .getUrl(Uri.parse(url))
               .timeout(const Duration(seconds: 5)),
           // Retry on SocketException or TimeoutException
-          retryIf: (e) => true,
           maxAttempts: 5,
         );
         headers.forEach((k, v) => request.headers.add(k, v));

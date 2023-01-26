@@ -393,6 +393,29 @@ class DownloadManagement {
     if (!applyRange) return tiles;
     return tiles.getRange(region.start, region.end ?? tiles.length).toList();
   }
+
+  static Future<num> _generateTilesCountComputer(
+    DownloadableRegion region, {
+    bool applyRange = true,
+  }) async {
+    final num tilesCount = await compute(
+      region.type == RegionType.rectangle
+          ? rectangleTilesCount
+          : circleTilesCount,
+      {
+        'bounds': LatLngBounds.fromPoints(region.points),
+        'circleOutline': region.points,
+        'lineOutline': region.points.chunked(4).toList(),
+        'minZoom': region.minZoom,
+        'maxZoom': region.maxZoom,
+        'crs': region.crs,
+        'tileSize':
+            CustomPoint(region.options.tileSize, region.options.tileSize),
+      },
+    );
+
+    return tilesCount;
+  }
 }
 
 extension _ListExtensionsE<E> on List<E> {

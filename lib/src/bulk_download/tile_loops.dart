@@ -88,6 +88,89 @@ List<Coords<num>> circleTiles(Map<String, dynamic> input) {
   return coords;
 }
 
+num rectangleTilesCount(Map<String, dynamic> input) {
+  final LatLngBounds bounds = input['bounds'];
+  final int minZoom = input['minZoom'];
+  final int maxZoom = input['maxZoom'];
+  final Crs crs = input['crs'];
+  final CustomPoint<num> tileSize = input['tileSize'];
+
+  num tilesCount = 0;
+  for (int zoomLvl = minZoom; zoomLvl <= maxZoom; zoomLvl++) {
+    final CustomPoint<num> nwCustomPoint = crs
+        .latLngToPoint(bounds.northWest, zoomLvl.toDouble())
+        .unscaleBy(tileSize)
+        .floor();
+    final CustomPoint<num> seCustomPoint = crs
+            .latLngToPoint(bounds.southEast, zoomLvl.toDouble())
+            .unscaleBy(tileSize)
+            .ceil() -
+        const CustomPoint(1, 1);
+
+    for (num x = nwCustomPoint.x; x <= seCustomPoint.x; x++) {
+      for (num y = nwCustomPoint.y; y <= seCustomPoint.y; y++) {
+        tilesCount++;
+      }
+    }
+  }
+  return tilesCount;
+}
+
+num circleTilesCount(Map<String, dynamic> input) {
+  // This took some time and is fairly complicated, so this is the overall explanation:
+  // 1. Given a `LatLng` for every x degrees on a circle's circumference, convert it into a tile number
+  // 2. Using a `Map` per zoom level, record all the X values in it without duplicates
+  // 3. Under the previous record, add all the Y values within the circle (ie. to opposite the X value)
+  // 4. Loop over these XY values and add them to the list
+  // Theoretically, this could have been done using the same method as `lineTiles`, but `lineTiles` was built after this algorithm and this makes more sense for a circle
+
+  final List<LatLng> circleOutline = input['circleOutline'];
+  final int minZoom = input['minZoom'];
+  final int maxZoom = input['maxZoom'];
+  final Crs crs = input['crs'];
+  final CustomPoint<num> tileSize = input['tileSize'];
+
+  // Format: Map<z, Map<x, List<y>>>
+  final Map<int, Map<int, List<int>>> outlineTileNums = {};
+
+  num tilesCount = 0;
+
+  for (int zoomLvl = minZoom; zoomLvl <= maxZoom; zoomLvl++) {
+    outlineTileNums[zoomLvl] = <int, List<int>>{};
+
+    for (final LatLng node in circleOutline) {
+      final CustomPoint<num> tile = crs
+          .latLngToPoint(node, zoomLvl.toDouble())
+          .unscaleBy(tileSize)
+          .floor();
+
+      outlineTileNums[zoomLvl]![tile.x.toInt()] ??= [
+        1000000000000,
+        -1000000000000
+      ];
+
+      outlineTileNums[zoomLvl]![tile.x.toInt()] = [
+        tile.y < outlineTileNums[zoomLvl]![tile.x.toInt()]![0]
+            ? tile.y.toInt()
+            : outlineTileNums[zoomLvl]![tile.x.toInt()]![0],
+        tile.y > outlineTileNums[zoomLvl]![tile.x.toInt()]![1]
+            ? tile.y.toInt()
+            : outlineTileNums[zoomLvl]![tile.x.toInt()]![1],
+      ];
+    }
+
+    for (final int x in outlineTileNums[zoomLvl]!.keys) {
+      for (int y = outlineTileNums[zoomLvl]![x]![0];
+          y <= outlineTileNums[zoomLvl]![x]![1];
+          y++) {
+        tilesCount++;
+      }
+    }
+  }
+
+  return tilesCount;
+}
+
 List<Coords<num>> lineTiles(Map<String, dynamic> input) {
   // This took some time and is fairly complicated, so this is the overall explanation:
   // 1. Given 4 `LatLng` points, create a 'straight' rectangle around the 'rotated' rectangle, that can be defined with just 2 `LatLng` points

@@ -107,11 +107,8 @@ num rectangleTilesCount(Map<String, dynamic> input) {
             .ceil() -
         const CustomPoint(1, 1);
 
-    for (num x = nwCustomPoint.x; x <= seCustomPoint.x; x++) {
-      for (num y = nwCustomPoint.y; y <= seCustomPoint.y; y++) {
-        tilesCount++;
-      }
-    }
+    tilesCount += (seCustomPoint.x - nwCustomPoint.x + 1) *
+        (seCustomPoint.y - nwCustomPoint.y + 1);
   }
   return tilesCount;
 }

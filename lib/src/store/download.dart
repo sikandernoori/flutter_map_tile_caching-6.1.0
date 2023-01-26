@@ -234,7 +234,7 @@ class DownloadManagement {
   ///
   /// Returns an `int` which is the number of tiles.
   Future<int> check(DownloadableRegion region) async =>
-      (await _generateTilesComputer(region)).length;
+      (await _generateTilesCountComputer(region)).toInt();
 
   /// Cancels the ongoing foreground download and recovery session (within the current object)
   ///
